@@ -21,12 +21,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->pushButtonSave,    &QPushButton::clicked,          this, &MainWindow::SaveFileAs);
     connect(ui->tabWidget,         &QTabWidget::tabCloseRequested, this, &MainWindow::CloseTab);
     connect(ui->lineEditSearch,    &QLineEdit::textChanged,        this, &MainWindow::Search);
-    connect(ui->tabWidget->currentWidget()->findChild<QTextEdit *>(), &QTextEdit::cursorPositionChanged, this, &MainWindow::cursorCoord);
-    connect(ui->tabWidget->currentWidget()->findChild<QTextEdit *>(), &QTextEdit::textChanged,           this, &MainWindow::addStar);
-
-//    connect(ui->tabWidget->currentWidget()->findChildren<QTextEdit *>().first(), &QTextEdit::textChanged,           this, &MainWindow::addStar);
-//    connect(ui->pushButtonNewTab,  &QPushButton::clicked,          this, &MainWindow::deleteStar);
-
+    connect(ui->tabWidget->currentWidget()->findChild<MyTextEdit *>(), &MyTextEdit::cursorPositionChanged, this, &MainWindow::cursorCoord);
+    connect(ui->tabWidget->currentWidget()->findChild<MyTextEdit *>(), &MyTextEdit::textChanged,           this, &MainWindow::addStar);
 }
 
 MainWindow::~MainWindow()
@@ -54,11 +50,16 @@ void MainWindow::OpenFile( bool){
             QWidget *newTab = new Tab(ui->tabWidget);
             ui->tabWidget->addTab(newTab, fileName);
             ui->tabWidget->setCurrentIndex(index+1);
+//            ui->tabWidget->setCurrentWidget(newTab);
         }else { // Si n a un onglet sans texte (au démarrage) change le titre (tabtext) de l'onglet courant
             ui->tabWidget->setTabText(index,fileName);
         }
     }else { // S'il n'y a pas d'onglet on en ajoute un
-        QWidget *newTab = new Tab(ui->tabWidget);
+//        QWidget *newTab = new Tab(ui->tabWidget);
+
+        Tab *newTab = new Tab(ui->tabWidget);
+        connect(newTab, &Tab::signal1, this, &MainWindow::addStar);
+
         ui->tabWidget->addTab(newTab, fileName);
     }
 
@@ -215,34 +216,23 @@ void MainWindow::Search()
     QString text = currentTextEdit->toPlainText();
     QString s = ui->lineEditSearch->displayText();
 
-//    qDebug() << text;
-//    qDebug() << s;
-//    qDebug() << text.indexOf(s);;
-
-
     int begin = text.indexOf(s);
     int end = text.indexOf(s)+s.length();
 
     QTextCharFormat fmt;
     if(s==""){
-        qDebug() << "vide"; // clear les highlights
+        // clear les highlights
 
     } else {
-        qDebug() << "pas vide";
+        // update les highlights
     }
     fmt.clearBackground();
-    fmt.setBackground(Qt::yellow); // clear les highlights
+    fmt.setBackground(Qt::yellow);
 
     QTextCursor cursor = currentTextEdit->textCursor();
     cursor.setPosition(begin, QTextCursor::MoveAnchor);
     cursor.setPosition(end, QTextCursor::KeepAnchor);
     cursor.setCharFormat(fmt);
-
-//    default = QTextCharFormat();
-//    charFormat = self.textCursor().charFormat();
-//    charFormat.setBackground(default.background());
-//    charFormat.setForeground(default.foreground());
-//    self.textCursor().mergeCharFormat(charFormat);
 
 }
 

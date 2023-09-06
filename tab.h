@@ -11,6 +11,9 @@ class Tab : public QWidget
 {
     Q_OBJECT
 
+signals:
+    void signal1 ();
+
 public:
     explicit Tab(QWidget *parent = nullptr);
     ~Tab();
