@@ -21,8 +21,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->pushButtonSave,    &QPushButton::clicked,          this, &MainWindow::SaveFileAs);
     connect(ui->tabWidget,         &QTabWidget::tabCloseRequested, this, &MainWindow::CloseTab);
     connect(ui->lineEditSearch,    &QLineEdit::textChanged,        this, &MainWindow::Search);
-    connect(ui->tabWidget->currentWidget()->findChild<QTextEdit *>(), &QTextEdit::textChanged,           this, &MainWindow::addStar);
     connect(ui->tabWidget->currentWidget()->findChild<QTextEdit *>(), &QTextEdit::cursorPositionChanged, this, &MainWindow::cursorCoord);
+    connect(ui->tabWidget->currentWidget()->findChild<QTextEdit *>(), &QTextEdit::textChanged,           this, &MainWindow::addStar);
+
+//    connect(ui->tabWidget->currentWidget()->findChildren<QTextEdit *>().first(), &QTextEdit::textChanged,           this, &MainWindow::addStar);
 //    connect(ui->pushButtonNewTab,  &QPushButton::clicked,          this, &MainWindow::deleteStar);
 
 }
@@ -38,8 +40,8 @@ MainWindow::~MainWindow()
 void MainWindow::OpenFile( bool){
 
     int index = ui->tabWidget->currentIndex(); // index de l'onglet
-    QWidget* currentWidget = ui->tabWidget->currentWidget();  // Widget dans l'onglet courant
-    QTextEdit* currentTextEdit = currentWidget->findChild<QTextEdit *>();   // TextEdit de l'onglet courant
+    QWidget* currentWidget = ui->tabWidget->currentWidget();  // Widget dans l'onglet courant 
+    MyTextEdit* currentTextEdit = currentWidget->findChild<MyTextEdit *>();
     QString currentTabText = ui->tabWidget->tabText(index); // titre de l'onglet
 
     /// Ouvre un boite de dialogue et stocke le nom du fichier choisi dans "fileName"
@@ -70,8 +72,20 @@ void MainWindow::OpenFile( bool){
         QByteArray line = file.readLine();
         text.append(line);
     }
-    currentTextEdit = ui->tabWidget->currentWidget()->findChild<QTextEdit *>();
+    currentTextEdit = ui->tabWidget->currentWidget()->findChild<MyTextEdit *>();
     currentTextEdit->setText(text);
+    currentTextEdit->setInitText(ui->tabWidget->currentWidget()->findChild<MyTextEdit *>()->toPlainText());
+
+    addStar();
+
+//    QList<QTextEdit *> allTextEdits = ui->tabWidget->currentWidget()->findChildren<QTextEdit *>();
+//    if (allTextEdits.count() != 1)
+//    {
+//        qWarning() << "Error";
+//        return;
+//    }
+//    qDebug() << allTextEdits.length() <<  " | " << allTextEdits.size();
+//    qDebug() << allTextEdits[0];
 }
 
 /**
@@ -147,7 +161,6 @@ void MainWindow::CloseTab(int i)
               break;
         }
 
-
     }else{
         ui->tabWidget->removeTab(i);
     }
@@ -155,14 +168,17 @@ void MainWindow::CloseTab(int i)
 
 void MainWindow::addStar()
 {
-    int index = ui->tabWidget->currentIndex();
+    int index =        ui->tabWidget->currentIndex();
     QString fileName = ui->tabWidget->tabText(index);
-    if(fileName.contains("*")){
+    QString textInit = ui->tabWidget->currentWidget()->findChild<MyTextEdit *>()->initText;
+    QString text =     ui->tabWidget->currentWidget()->findChild<MyTextEdit *>()->toPlainText();
 
-    }else{
+    if(text == textInit && fileName.contains("*")){
+        fileName.chop(1);
+    }else if (text != textInit && !fileName.contains("*")){
         fileName.append("*");
-        ui->tabWidget->setTabText(index,fileName);
     }
+    ui->tabWidget->setTabText(index,fileName);
 }
 
 void MainWindow::deleteStar()
@@ -197,17 +213,36 @@ void MainWindow::Search()
 {
     QTextEdit* currentTextEdit = ui->tabWidget->currentWidget()->findChild<QTextEdit *>();
     QString text = currentTextEdit->toPlainText();
+    QString s = ui->lineEditSearch->displayText();
 
-    int begin = 1;
-    int end = 3;
+//    qDebug() << text;
+//    qDebug() << s;
+//    qDebug() << text.indexOf(s);;
+
+
+    int begin = text.indexOf(s);
+    int end = text.indexOf(s)+s.length();
 
     QTextCharFormat fmt;
-    fmt.setBackground(Qt::yellow);
+    if(s==""){
+        qDebug() << "vide"; // clear les highlights
+
+    } else {
+        qDebug() << "pas vide";
+    }
+    fmt.clearBackground();
+    fmt.setBackground(Qt::yellow); // clear les highlights
 
     QTextCursor cursor = currentTextEdit->textCursor();
     cursor.setPosition(begin, QTextCursor::MoveAnchor);
     cursor.setPosition(end, QTextCursor::KeepAnchor);
     cursor.setCharFormat(fmt);
+
+//    default = QTextCharFormat();
+//    charFormat = self.textCursor().charFormat();
+//    charFormat.setBackground(default.background());
+//    charFormat.setForeground(default.foreground());
+//    self.textCursor().mergeCharFormat(charFormat);
 
 }
 
